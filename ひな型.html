@@ -190,6 +190,36 @@ body.touched .whisper{opacity:1; transform:none}
   color:var(--ink-faint); margin-top:1.5rem; line-height:2.2;
 }
 
+/* ═══════════════ 間 ― 水彩の手が湧きあがる映像 ═══════════════ */
+#bloom{justify-content:flex-end; padding-bottom:clamp(4rem,14vh,8rem)}
+.bloom-frame{
+  position:absolute; inset:0; z-index:-1;
+  overflow:hidden; pointer-events:none;
+}
+.bloom-video{
+  width:100%; height:100%; object-fit:cover;
+  /* 黒地の映像なので、加算合成で空間そのものに溶ける */
+  mix-blend-mode:screen;
+  opacity:0; transform:scale(1.06);
+  transition:opacity 2.4s var(--ease), transform 6s var(--ease);
+  /* 四辺を羽根のようにぼかし、「箱」に見せない */
+  -webkit-mask-image:radial-gradient(76% 66% at 50% 46%,#000 52%,transparent 92%);
+          mask-image:radial-gradient(76% 66% at 50% 46%,#000 52%,transparent 92%);
+}
+#bloom.on .bloom-video{opacity:1; transform:scale(1)}
+.bloom-line{
+  font-size:clamp(1.3rem,6.6vw,2.1rem);
+  letter-spacing:.2em; line-height:1.8;
+  text-shadow:0 0 34px rgba(0,0,0,.9);
+}
+.bloom-sub{
+  margin-top:1.3rem;
+  font-family:var(--sans); font-size:.58rem;
+  letter-spacing:.32em; text-indent:.32em;
+  color:var(--ink-faint); line-height:2.2;
+  text-shadow:0 0 20px rgba(0,0,0,.9);
+}
+
 /* ═══════════════ 試 ― 実際に試着する場所 ═══════════════ */
 #fitting{
   gap:0;
@@ -479,6 +509,17 @@ body.touched .whisper{opacity:1; transform:none}
         <small>{{T:変化3の説明}}</small>
       </p>
     </div>
+  </section>
+
+  <!-- ══════════ 間 ― ひと呼吸おく映像 ══════════ -->
+  <section class="scene" id="bloom">
+    <div class="bloom-frame">
+      <video class="bloom-video" src="assets/watercolor-hands.mp4"
+             muted loop playsinline preload="none"
+             disablepictureinpicture aria-hidden="true"></video>
+    </div>
+    <p class="bloom-line kin">{{T:映像の言葉}}</p>
+    <p class="bloom-sub rev d2">{{T:映像の説明}}</p>
   </section>
 
   <!-- ══════════ 試 ══════════ -->
@@ -949,8 +990,10 @@ async function startGL(){
    ═══════════════════════════════════════════════════ */
 (function(){
   const shift = document.getElementById('shift');
-  /* 「試」以降は作品を後退させ、文字を読みやすくする */
-  const read  = document.getElementById('fitting') || document.getElementById('read');
+  /* 映像の場面から先は、シェーダーを後退させて主役を譲る */
+  const read  = document.getElementById('bloom')
+             || document.getElementById('fitting')
+             || document.getElementById('read');
   let target = {prog:0,dots:0,dim:0};
 
   function measure(){
@@ -1013,6 +1056,37 @@ async function startGL(){
     es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
   },{threshold:.25});
   document.querySelectorAll('.kin,.rev').forEach(el=>io.observe(el));
+})();
+
+/* ═══════════════════════════════════════════════════
+   7. 映像 ― 画面に入ったときだけ再生する（電池と通信の節約）
+   ═══════════════════════════════════════════════════ */
+(function(){
+  const scene = document.getElementById('bloom');
+  if(!scene) return;
+  const v = scene.querySelector('.bloom-video');
+  if(!v) return;
+
+  let loaded = false;
+  const vo = new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        if(!loaded){ v.load(); loaded = true; }   /* preload="none" のぶん、ここで読み込む */
+        scene.classList.add('on');
+        const p = v.play();
+        if(p && p.catch) p.catch(()=>{});         /* 自動再生が拒まれても止まらない */
+      }else{
+        v.pause();
+      }
+    });
+  },{threshold:.18});
+  vo.observe(scene);
+
+  /* 別タブに移ったら止める */
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden) v.pause();
+    else if(scene.classList.contains('on')){ const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }
+  });
 })();
 
 /* ═══════════════════════════════════════════════════
