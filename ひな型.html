@@ -384,6 +384,62 @@ body.touched .whisper{opacity:1; transform:none}
   letter-spacing:.32em; line-height:2.7;
 }
 
+/* ═══════════════ 還 ― 実際の手・実際の施術へ ═══════════════ */
+#realm{
+  padding-block:14vh 20vh;
+  /* ここだけ地を落ち着かせ、写真を沈ませない */
+  background:linear-gradient(180deg,transparent,rgba(6,6,10,.88) 12%,rgba(6,6,10,.92) 88%,transparent);
+}
+.realm-title{
+  font-size:clamp(1.9rem,9.5vw,3rem);
+  font-weight:400; letter-spacing:.16em; line-height:1.45; margin-top:1.4rem;
+  text-shadow:0 0 46px rgba(191,163,106,.28);
+}
+.realm-lead{
+  max-width:26rem; width:100%; margin-top:1.8rem;
+  font-size:clamp(.84rem,3.65vw,.98rem);
+  letter-spacing:.02em; color:var(--ink-dim); line-height:2.2;
+}
+/* 写真そのものが入口 */
+.realm-door{
+  display:block; position:relative; text-decoration:none;
+  width:100%; max-width:430px;
+  margin-top:clamp(2.4rem,7vh,3.6rem);
+  transition:transform .9s var(--ease);
+}
+.realm-photo{
+  width:100%; aspect-ratio:4/5; border-radius:3px;
+  background-size:cover; background-position:center;
+  /* CGではなく実写なので、暗く沈めず、ほぼそのままの明るさで出す */
+  filter:saturate(1.02) brightness(.97);
+  -webkit-mask-image:radial-gradient(84% 78% at 50% 48%,#000 58%,transparent 96%);
+          mask-image:radial-gradient(84% 78% at 50% 48%,#000 58%,transparent 96%);
+  transition:filter .9s var(--ease);
+}
+.realm-door::after{           /* 実写のまわりにだけ、鈍い金の気配 */
+  content:''; position:absolute; inset:-6%; border-radius:50%;
+  background:radial-gradient(circle,rgba(191,163,106,.16),transparent 62%);
+  z-index:-1; pointer-events:none;
+}
+.realm-cap{
+  display:flex; flex-direction:column; align-items:center; gap:.55rem;
+  margin-top:1.5rem; text-align:center;
+}
+.realm-cap b{
+  font-family:var(--serif); font-weight:400;
+  font-size:clamp(1.15rem,5vw,1.5rem); letter-spacing:.2em; text-indent:.2em;
+  color:var(--ink);
+}
+.realm-cap i{
+  font-style:normal; font-family:var(--sans);
+  font-size:.58rem; letter-spacing:.22em; text-indent:.22em;
+  color:var(--gold); line-height:2;
+}
+.realm-door:active{transform:scale(.985)}
+.realm-door:hover .realm-photo,.realm-door:active .realm-photo{
+  filter:saturate(1.1) brightness(1.05);
+}
+
 /* ═══ 最小メニュー ═══ */
 #burger{
   position:fixed; z-index:60;
@@ -474,6 +530,7 @@ body.touched .whisper{opacity:1; transform:none}
   <a href="#fitting">試<small>TRY ON</small></a>
   <a href="#read">読<small>WORKS</small></a>
   <a href="#trace">残<small>TRACE</small></a>
+  <a href="#realm">還<small>REAL</small></a>
 </nav>
 
 <main>
@@ -605,6 +662,23 @@ body.touched .whisper{opacity:1; transform:none}
       <figure class="cell" style="background:radial-gradient(closest-side,rgba(224,168,190,.4),transparent 70%) 34% 40%/56% 56% no-repeat,radial-gradient(closest-side,rgba(169,198,230,.36),transparent 70%) 66% 62%/48% 48% no-repeat,#0c0c12"><figcaption>{{T:一覧5}}</figcaption></figure>
       <figure class="cell" style="background:radial-gradient(circle at 50% 42%,rgba(191,163,106,.34),#0c0c12 68%)"><figcaption>{{T:一覧6}}</figcaption></figure>
     </div>
+  </section>
+
+  <!-- ══════════ 還 ― 画面を出て、実際の手へ ══════════ -->
+  <section class="scene" id="realm">
+    <p class="sign rev" style="justify-content:center">{{T:場面の名前・還}}</p>
+    <h2 class="realm-title kin">{{T:還るの見出し}}</h2>
+    <p class="realm-lead rev d1">{{T:還るの説明}}</p>
+
+    <a class="realm-door rev d2" href="{{T:ケアのページのURL}}" target="_blank" rel="noopener">
+      <figure class="realm-photo" style="background-image:url('{{IMG:real-nails}}')"></figure>
+      <span class="realm-cap">
+        <b>{{T:ケアのページの名前}}</b>
+        <i>{{T:ケアのページの説明}}</i>
+      </span>
+    </a>
+
+    <p class="fitting-note rev d3">{{T:還るの注記}}</p>
   </section>
 
 </main>
