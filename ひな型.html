@@ -754,7 +754,7 @@ vec3 artwork(vec2 uv){
   vec2 p2 = fitUV(uv,uAsp.z);
   vec3 a = texture2D(uT0,p0).rgb * inBox(p0);
   vec3 b = texture2D(uT1,p1).rgb * inBox(p1);
-  /* 思唯手は明るい紙の上の線画。反転して「闇に光る線」にする */
+  /* 思惟手は明るい紙の上の線画。反転して「闇に光る線」にする */
   vec3 c = (1.0 - texture2D(uT2,p2).rgb) * inBox(p2);
   float m1 = clamp(uProg,0.0,1.0);
   float m2 = clamp(uProg-1.0,0.0,1.0);
