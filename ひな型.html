@@ -190,6 +190,63 @@ body.touched .whisper{opacity:1; transform:none}
   color:var(--ink-faint); margin-top:1.5rem; line-height:2.2;
 }
 
+/* ═══════════════ 試 ― 実際に試着する場所 ═══════════════ */
+#fitting{gap:0}
+.fitting-title{
+  font-size:clamp(2rem,11vw,3.4rem);
+  font-weight:400; letter-spacing:.18em; line-height:1.4;
+  margin:1.5rem 0 0;
+  text-shadow:0 0 50px rgba(169,198,230,.3);
+}
+.fitting-lead{
+  max-width:26rem; margin-top:1.9rem;
+  font-size:clamp(.88rem,3.9vw,1rem);
+  color:var(--ink-dim); line-height:2.2;
+}
+/* 入口 ― 光の環をくぐる */
+.door{
+  display:grid; place-items:center;
+  width:min(64vw,220px); aspect-ratio:1/1;
+  margin-top:clamp(2.6rem,8vh,4rem);
+  text-decoration:none; position:relative;
+  transition:transform .8s var(--ease);
+}
+.door-ring{
+  position:absolute; inset:0; border-radius:50%;
+  border:1px solid rgba(239,236,231,.26);
+  background:radial-gradient(circle at 50% 45%,
+    rgba(169,198,230,.16), rgba(224,168,190,.07) 46%, transparent 70%);
+  transition:border-color .8s var(--ease), transform .8s var(--ease);
+}
+.door-ring::before,.door-ring::after{
+  content:''; position:absolute; inset:-1px; border-radius:50%;
+  border:1px solid rgba(169,198,230,.34);
+  animation:doorEmit 4.2s var(--ease) infinite;
+}
+.door-ring::after{animation-delay:2.1s}
+@keyframes doorEmit{
+  0%{transform:scale(.86); opacity:0}
+  30%{opacity:.75}
+  100%{transform:scale(1.42); opacity:0}
+}
+.door-label{
+  position:relative; z-index:1;
+  font-size:clamp(.95rem,4.2vw,1.1rem);
+  letter-spacing:.24em; text-indent:.24em;
+  color:var(--ink);
+  text-shadow:0 0 24px rgba(0,0,0,.7);
+}
+.door:active{transform:scale(.97)}
+.door:hover .door-ring,.door:active .door-ring{
+  border-color:rgba(239,236,231,.6); transform:scale(1.04);
+}
+.fitting-note{
+  margin-top:clamp(2rem,6vh,3rem);
+  font-family:var(--sans); font-size:.6rem;
+  letter-spacing:.26em; color:var(--ink-faint); line-height:2.2;
+  max-width:22rem;
+}
+
 /* ═══════════════ 読 ═══════════════ */
 #read{
   justify-content:flex-start; align-items:stretch;
@@ -355,6 +412,7 @@ body.touched .whisper{opacity:1; transform:none}
   <a href="#prologue">序<small>PROLOGUE</small></a>
   <a href="#touch">触<small>TOUCH</small></a>
   <a href="#shift">変<small>TRANSFIGURE</small></a>
+  <a href="#fitting">試<small>TRY ON</small></a>
   <a href="#read">読<small>WORKS</small></a>
   <a href="#trace">残<small>TRACE</small></a>
 </nav>
@@ -396,6 +454,18 @@ body.touched .whisper{opacity:1; transform:none}
         <small>{{T:変化3の説明}}</small>
       </p>
     </div>
+  </section>
+
+  <!-- ══════════ 試 ══════════ -->
+  <section class="scene" id="fitting">
+    <p class="sign rev" style="justify-content:center">{{T:場面の名前・試}}</p>
+    <h2 class="fitting-title kin">{{T:試着の間の見出し}}</h2>
+    <p class="fitting-lead rev d1">{{T:試着の間の説明}}</p>
+    <a class="door rev d2" href="{{T:試着アプリのURL}}" target="_blank" rel="noopener">
+      <span class="door-ring"></span>
+      <span class="door-label">{{T:試着ボタンの言葉}}</span>
+    </a>
+    <p class="fitting-note rev d3">{{T:試着の間の注記}}</p>
   </section>
 
   <!-- ══════════ 読 ══════════ -->
@@ -447,7 +517,6 @@ body.touched .whisper{opacity:1; transform:none}
       <figure class="cell" style="background:radial-gradient(closest-side,rgba(224,168,190,.4),transparent 70%) 34% 40%/56% 56% no-repeat,radial-gradient(closest-side,rgba(169,198,230,.36),transparent 70%) 66% 62%/48% 48% no-repeat,#0c0c12"><figcaption>{{T:一覧5}}</figcaption></figure>
       <figure class="cell" style="background:radial-gradient(circle at 50% 42%,rgba(191,163,106,.34),#0c0c12 68%)"><figcaption>{{T:一覧6}}</figcaption></figure>
     </div>
-    <p class="colophon rev d2">{{T:クレジット}}</p>
   </section>
 
 </main>
@@ -876,14 +945,23 @@ async function startGL(){
    ═══════════════════════════════════════════════════ */
 (function(){
   document.querySelectorAll('.kin').forEach(el=>{
-    const txt = el.textContent;
+    /* 改行(<br>)はそのまま残し、文字だけを一字ずつに分解する */
+    const nodes = [...el.childNodes];
     el.textContent = '';
-    [...txt].forEach((ch,i)=>{
-      const s = document.createElement('span');
-      s.className='ch';
-      s.textContent = ch;
-      s.style.transitionDelay = (i*0.05)+'s';
-      el.appendChild(s);
+    let i = 0;
+    nodes.forEach(node=>{
+      if(node.nodeType === 1 && node.tagName === 'BR'){
+        el.appendChild(document.createElement('br'));
+        return;
+      }
+      [...node.textContent].forEach(ch=>{
+        const s = document.createElement('span');
+        s.className='ch';
+        s.textContent = ch;
+        s.style.transitionDelay = (i*0.05)+'s';
+        el.appendChild(s);
+        i++;
+      });
     });
   });
 
