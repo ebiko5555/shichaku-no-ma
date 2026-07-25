@@ -191,7 +191,11 @@ body.touched .whisper{opacity:1; transform:none}
 }
 
 /* ═══════════════ 間 ― 水彩の手が湧きあがる映像 ═══════════════ */
-#bloom{justify-content:flex-end; padding-bottom:clamp(4rem,14vh,8rem)}
+#bloom{
+  justify-content:flex-end; padding-bottom:clamp(4rem,14vh,8rem);
+  /* 下側だけ暗く沈めて、映像の明るい部分でも文字が読めるようにする */
+  background:linear-gradient(180deg,transparent 46%,rgba(6,6,10,.66) 74%,rgba(6,6,10,.8));
+}
 .bloom-frame{
   position:absolute; inset:0; z-index:-1;
   overflow:hidden; pointer-events:none;
@@ -208,16 +212,16 @@ body.touched .whisper{opacity:1; transform:none}
 }
 #bloom.on .bloom-video{opacity:1; transform:scale(1)}
 .bloom-line{
-  font-size:clamp(1.3rem,6.6vw,2.1rem);
-  letter-spacing:.2em; line-height:1.8;
-  text-shadow:0 0 34px rgba(0,0,0,.9);
+  font-size:clamp(1.15rem,5.5vw,2rem);
+  letter-spacing:.1em; line-height:1.8;   /* 1行に収まるよう詰める */
+  text-shadow:0 2px 30px rgba(0,0,0,.95), 0 0 60px rgba(0,0,0,.8);
 }
 .bloom-sub{
-  margin-top:1.3rem;
-  font-family:var(--sans); font-size:.58rem;
-  letter-spacing:.32em; text-indent:.32em;
-  color:var(--ink-faint); line-height:2.2;
-  text-shadow:0 0 20px rgba(0,0,0,.9);
+  margin-top:1.3rem; max-width:24rem; width:100%;
+  font-family:var(--sans); font-size:.56rem;
+  letter-spacing:.22em; text-indent:.22em;
+  color:var(--ink-dim); line-height:2.2;
+  text-shadow:0 2px 18px rgba(0,0,0,.95);
 }
 
 /* ═══════════════ 試 ― 実際に試着する場所 ═══════════════ */
@@ -519,7 +523,7 @@ body.touched .whisper{opacity:1; transform:none}
              disablepictureinpicture aria-hidden="true"></video>
     </div>
     <p class="bloom-line kin">ふたつの手が、湧きあがる</p>
-    <p class="bloom-sub rev d2">WATERCOLOUR ― 水に溶けた色から、手がかたちを取り戻す</p>
+    <p class="bloom-sub rev d2">WATERCOLOUR<br>水に溶けた色から、手がかたちを取り戻す</p>
   </section>
 
   <!-- ══════════ 試 ══════════ -->
