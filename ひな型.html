@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#06060a">
+<meta name="description" content="試着の間 ― 手・ネイル・痕跡をめぐる、触れる作品空間。今福恵美子">
+<title>試着の間 ― 触れる作品空間</title>
+<style>
+/* ═══════════════════════════════════════════════════════
+   試着の間 ― 触れる作品空間
+   5つの場面で構成された、スマホで触れる作品空間
+   序 → 触 → 変 → 読 → 残
+   ═══════════════════════════════════════════════════════ */
+
+:root{
+  --ink:       #efece7;
+  --ink-dim:   rgba(239,236,231,.58);
+  --ink-faint: rgba(239,236,231,.30);
+  --ink-ghost: rgba(239,236,231,.14);
+  --blue:      #a9c6e6;
+  --gold:      #bfa36a;
+  --serif: "Hiragino Mincho ProN","YuMincho","Yu Mincho",serif;
+  --sans:  "Hiragino Sans","Helvetica Neue",sans-serif;
+  --ease:  cubic-bezier(.16,1,.3,1);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+body{
+  background:#06060a;
+  color:var(--ink);
+  font-family:var(--serif);
+  line-height:1.95;
+  letter-spacing:.05em;
+  overflow-x:hidden;
+  overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ── 作品そのものが背景。全画面に固定されたシェーダー ── */
+#gl{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:0; display:block;
+  touch-action:pan-y;          /* 縦スクロールは通す／横は掴む */
+}
+/* 触れて飛ぶ粒子（軽量2Dレイヤー・普段は空） */
+#motes{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:1; pointer-events:none;
+}
+/* WebGLが使えない環境用の代替背景 */
+#fallback{
+  position:fixed; inset:0; z-index:0; display:none;
+  background:
+    radial-gradient(42% 32% at 50% 34%, rgba(169,198,230,.13), transparent 70%),
+    radial-gradient(46% 34% at 74% 74%, rgba(168,150,214,.30), transparent 72%),
+    radial-gradient(42% 32% at 24% 70%, rgba(224,168,190,.26), transparent 70%),
+    #06060a;
+}
+#fallback::after{
+  content:''; position:absolute; inset:0;
+  background:url('{{IMG:reference-space-hand}}') center 42%/min(92vw,540px) no-repeat;
+  opacity:.2; mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(66% 66% at 55% 46%,#000 54%,transparent 88%);
+          mask-image:radial-gradient(66% 66% at 55% 46%,#000 54%,transparent 88%);
+}
+body.no-gl #fallback{display:block}
+body.no-gl #gl{display:none}
+
+main{position:relative; z-index:2}
+
+/* ═══ 場面の共通枠 ═══ */
+.scene{
+  position:relative;
+  min-height:100svh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:clamp(1.5rem,7vw,4rem);
+  text-align:center;
+}
+
+/* 場面の見出し（縦の小さな標） */
+.sign{
+  font-family:var(--sans);
+  font-size:.58rem; font-weight:400;
+  letter-spacing:.46em; text-indent:.46em;
+  color:var(--ink-faint);
+  display:flex; align-items:center; gap:.9rem;
+}
+.sign::before{content:''; width:26px; height:1px; background:var(--ink-ghost)}
+
+/* ═══ キネティック・タイポグラフィ ═══ */
+.kin{display:block}
+.kin .ch{
+  display:inline-block; white-space:pre;
+  opacity:0; filter:blur(10px);
+  transform:translateY(.42em) scale(1.06);
+  transition:opacity 1.15s var(--ease), transform 1.15s var(--ease), filter 1.15s var(--ease);
+}
+.kin.in .ch{opacity:1; filter:blur(0); transform:none}
+
+/* ふつうの出現 */
+.rev{opacity:0; transform:translateY(22px);
+  transition:opacity 1.3s var(--ease), transform 1.3s var(--ease)}
+.rev.in{opacity:1; transform:none}
+.d1{transition-delay:.12s} .d2{transition-delay:.28s} .d3{transition-delay:.46s}
+
+/* ═══════════════ 序 ═══════════════ */
+.title{
+  font-size:clamp(2.7rem,15vw,5.2rem);
+  font-weight:400; letter-spacing:.16em;
+  line-height:1.28; margin:1.6rem 0 0;
+  text-shadow:0 0 60px rgba(169,198,230,.28);
+}
+.subtitle{
+  font-family:var(--sans);
+  font-size:.58rem; letter-spacing:.44em; text-indent:.44em;
+  color:var(--ink-dim); margin-top:1.9rem; line-height:2.4;
+}
+.enter{
+  position:absolute; bottom:max(2.2rem,env(safe-area-inset-bottom));
+  left:50%; transform:translateX(-50%);
+  font-family:var(--sans); font-size:.6rem;
+  letter-spacing:.38em; text-indent:.38em; color:var(--ink-faint);
+  display:flex; flex-direction:column; align-items:center; gap:.85rem;
+}
+.enter i{display:block; width:1px; height:40px;
+  background:linear-gradient(var(--ink-faint),transparent);
+  animation:fall 3.2s var(--ease) infinite}
+@keyframes fall{
+  0%{transform:scaleY(0); transform-origin:top; opacity:0}
+  40%{transform:scaleY(1); opacity:1}
+  100%{transform:scaleY(1); transform-origin:bottom; opacity:0}
+}
+
+/* ═══════════════ 触 ═══════════════ */
+#touch{justify-content:space-between; padding-block:14vh 12vh}
+.touch-ring{
+  width:82px; height:82px; border-radius:50%;
+  border:1px solid rgba(239,236,231,.22);
+  position:relative; display:grid; place-items:center;
+  transition:opacity 1.4s var(--ease), transform 1.4s var(--ease);
+}
+.touch-ring::before,.touch-ring::after{
+  content:''; position:absolute; inset:0; border-radius:50%;
+  border:1px solid rgba(169,198,230,.32);
+  animation:emit 3.6s var(--ease) infinite;
+}
+.touch-ring::after{animation-delay:1.8s}
+@keyframes emit{
+  0%{transform:scale(.55); opacity:0}
+  35%{opacity:.8}
+  100%{transform:scale(2.1); opacity:0}
+}
+.touch-ring span{
+  font-family:var(--sans); font-size:.55rem;
+  letter-spacing:.26em; text-indent:.26em; color:var(--ink-dim);
+}
+body.touched .touch-ring{opacity:0; transform:scale(1.35)}
+
+.whisper{
+  font-size:clamp(.95rem,4.4vw,1.2rem);
+  letter-spacing:.14em; color:var(--ink-dim);
+  opacity:0; transform:translateY(14px);
+  transition:opacity 1.8s var(--ease) .3s, transform 1.8s var(--ease) .3s;
+  max-width:24rem;
+}
+body.touched .whisper{opacity:1; transform:none}
+
+/* ═══════════════ 変 ═══════════════ */
+#shift{padding:0}
+.phase{
+  min-height:105svh;
+  display:flex; align-items:center; justify-content:center;
+  padding:clamp(1.5rem,7vw,4rem);
+  text-align:center;
+}
+.phase p{
+  font-size:clamp(1.35rem,7.4vw,2.3rem);
+  letter-spacing:.22em; line-height:1.85;
+  text-shadow:0 0 40px rgba(0,0,0,.75);
+}
+.phase small{
+  display:block; font-family:var(--sans);
+  font-size:.55rem; letter-spacing:.36em; text-indent:.36em;
+  color:var(--ink-faint); margin-top:1.5rem; line-height:2.2;
+}
+
+/* ═══════════════ 読 ═══════════════ */
+#read{
+  justify-content:flex-start; align-items:stretch;
+  padding-block:16vh 10vh;
+  /* 読む場面だけ、文字が沈まないよう薄い幕を敷く */
+  background:linear-gradient(180deg,transparent,rgba(6,6,10,.76) 13%,rgba(6,6,10,.84) 87%,transparent);
+}
+.read-head{text-align:center; margin-bottom:clamp(3.5rem,12vh,7rem)}
+.read-head h2{
+  font-size:clamp(1.9rem,10vw,3.2rem);
+  font-weight:400; letter-spacing:.18em; margin-top:1.4rem;
+}
+.work{
+  max-width:33rem; width:100%; margin-inline:auto;
+  padding-block:clamp(3.2rem,9vh,5.5rem);
+  border-top:1px solid rgba(239,236,231,.09);
+  text-align:left;
+}
+.work:first-of-type{border-top:none; padding-top:0}
+.work-no{
+  font-family:var(--sans); font-size:.56rem;
+  letter-spacing:.42em; color:var(--gold); margin-bottom:1.1rem;
+}
+.work h3{font-size:clamp(1.55rem,7vw,2.1rem); font-weight:400; letter-spacing:.12em}
+.work-en{
+  font-family:var(--sans); font-size:.56rem; letter-spacing:.3em;
+  color:var(--ink-faint); margin:.7rem 0 1.7rem;
+}
+.work p{font-size:.9rem; color:var(--ink-dim); line-height:2.3}
+.work figure{
+  margin-top:1.9rem; width:100%; aspect-ratio:16/10;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  border-radius:2px; filter:brightness(.88) saturate(.95);
+  transition:filter 1.1s var(--ease), transform 1.1s var(--ease);
+}
+.work:hover figure,.work:active figure{filter:brightness(1.04) saturate(1.05); transform:scale(1.012)}
+
+.note{
+  max-width:33rem; width:100%; margin:clamp(3.5rem,11vh,6rem) auto 0;
+  padding:2.1rem 1.8rem; text-align:left;
+  border:1px solid rgba(239,236,231,.11); border-radius:3px;
+  background:linear-gradient(rgba(255,255,255,.022),rgba(255,255,255,.004));
+}
+.note h3{
+  font-family:var(--sans); font-size:.6rem; font-weight:400;
+  letter-spacing:.34em; color:var(--blue); margin-bottom:1.3rem;
+}
+.note p{font-size:.85rem; color:var(--ink-dim); line-height:2.3}
+.note p + p{margin-top:1.1rem}
+
+/* ═══════════════ 残 ═══════════════ */
+#trace{
+  justify-content:flex-start; padding-block:14vh 22vh;
+  background:linear-gradient(180deg,transparent,rgba(6,6,10,.6) 12%,rgba(6,6,10,.6));
+}
+.grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:7px;
+  width:100%; max-width:520px; margin:2.8rem auto 0;
+}
+.cell{
+  position:relative; aspect-ratio:1/1; overflow:hidden; border-radius:2px;
+  background:#0c0c12 center/cover no-repeat;
+  filter:grayscale(.5) brightness(.58);
+  transition:filter .9s var(--ease), transform .9s var(--ease);
+  cursor:pointer;
+}
+.cell:hover,.cell:active{filter:grayscale(0) brightness(1.02); transform:scale(.985)}
+.cell figcaption{
+  position:absolute; left:.7rem; bottom:.55rem;
+  font-family:var(--sans); font-size:.52rem; letter-spacing:.2em;
+  color:rgba(255,255,255,.88); text-shadow:0 1px 8px rgba(0,0,0,.9);
+}
+.colophon{
+  margin-top:clamp(4.5rem,15vh,8rem); text-align:center;
+  color:var(--ink-faint); font-size:.62rem;
+  letter-spacing:.32em; line-height:2.7;
+}
+
+/* ═══ 最小メニュー ═══ */
+#burger{
+  position:fixed; z-index:60;
+  top:max(1rem,env(safe-area-inset-top)); right:1rem;
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(10,10,16,.42); backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(239,236,231,.13);
+  display:grid; place-items:center; cursor:pointer;
+  opacity:0; transition:opacity 1.1s ease .5s;
+}
+#burger.show{opacity:1}
+#burger b{position:relative; display:block; width:15px; height:1px; background:var(--ink-dim); transition:.45s var(--ease)}
+#burger b::before,#burger b::after{
+  content:''; position:absolute; left:0; width:15px; height:1px;
+  background:var(--ink-dim); transition:.45s var(--ease);
+}
+#burger b::before{top:-5px} #burger b::after{top:5px}
+#burger.on b{background:transparent}
+#burger.on b::before{transform:translateY(5px) rotate(45deg)}
+#burger.on b::after{transform:translateY(-5px) rotate(-45deg)}
+
+#nav{
+  position:fixed; inset:0; z-index:55;
+  background:rgba(6,6,10,.88);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2.4rem;
+  opacity:0; pointer-events:none; transition:opacity .75s var(--ease);
+}
+#nav.on{opacity:1; pointer-events:auto}
+#nav a{
+  color:var(--ink-dim); text-decoration:none;
+  font-size:1.25rem; letter-spacing:.34em; text-indent:.34em;
+  text-align:center; transition:color .5s ease, letter-spacing .5s var(--ease);
+}
+#nav a:hover,#nav a:active{color:var(--ink); letter-spacing:.44em}
+#nav a small{
+  display:block; font-family:var(--sans); font-size:.5rem;
+  letter-spacing:.4em; text-indent:.4em; color:var(--ink-faint); margin-top:.5rem;
+}
+
+/* ═══ 入場（ローディング） ═══ */
+#gate{
+  position:fixed; inset:0; z-index:100; background:#06060a;
+  display:grid; place-items:center;
+  transition:opacity 1.7s var(--ease);
+}
+#gate.off{opacity:0; pointer-events:none}
+.gate-in{display:flex; flex-direction:column; align-items:center; gap:2.3rem}
+.gate-mark{width:1px; height:64px; background:rgba(239,236,231,.2); position:relative; overflow:hidden}
+.gate-mark i{
+  position:absolute; inset:0;
+  background:linear-gradient(transparent,var(--ink),transparent);
+  transform:translateY(-100%); animation:scan 1.9s var(--ease) infinite;
+}
+@keyframes scan{to{transform:translateY(100%)}}
+.gate-in p{
+  font-family:var(--sans); font-size:.56rem;
+  letter-spacing:.46em; text-indent:.46em; color:var(--ink-faint);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .kin .ch,.rev{transition-duration:.35s!important}
+  .touch-ring::before,.touch-ring::after,.enter i,.gate-mark i{animation:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+<canvas id="motes"></canvas>
+<div id="fallback"></div>
+
+<!-- 入場 -->
+<div id="gate">
+  <div class="gate-in">
+    <div class="gate-mark"><i></i></div>
+    <p>ひらいています</p>
+  </div>
+</div>
+
+<!-- 最小メニュー -->
+<button id="burger" aria-label="メニューを開く"><b></b></button>
+<nav id="nav">
+  <a href="#prologue">序<small>PROLOGUE</small></a>
+  <a href="#touch">触<small>TOUCH</small></a>
+  <a href="#shift">変<small>TRANSFIGURE</small></a>
+  <a href="#read">読<small>WORKS</small></a>
+  <a href="#trace">残<small>TRACE</small></a>
+</nav>
+
+<main>
+
+  <!-- ══════════ 序 ══════════ -->
+  <section class="scene" id="prologue">
+    <p class="sign rev">EMIKO IMAFUKU</p>
+    <h1 class="title kin">試着の間</h1>
+    <p class="subtitle rev d2">A ROOM TO TRY ON<br>触れる作品空間 ― 手・爪・痕跡</p>
+    <div class="enter rev d3"><span>ふれて、すすむ</span><i></i></div>
+  </section>
+
+  <!-- ══════════ 触 ══════════ -->
+  <section class="scene" id="touch">
+    <p class="sign rev">Ⅰ ― 触</p>
+    <div class="touch-ring rev d1"><span>ふれる</span></div>
+    <p class="whisper">指が触れたところから、膜がふるえる。<br>それは、爪という小さな面が<br>他者へ差し出されるときの、あの感じに似ている。</p>
+  </section>
+
+  <!-- ══════════ 変 ══════════ -->
+  <section id="shift">
+    <div class="phase">
+      <p class="kin-line">
+        <span class="kin">手は、のばされる</span>
+        <small>球体にふれる直前の、わずかな距離</small>
+      </p>
+    </div>
+    <div class="phase">
+      <p class="kin-line">
+        <span class="kin">表面が、ひらく</span>
+        <small>皮膚がほどけ、内側の粒子があらわれる</small>
+      </p>
+    </div>
+    <div class="phase">
+      <p class="kin-line">
+        <span class="kin">輪郭だけが、残る</span>
+        <small>かたちではなく、痕跡として立ちあがる</small>
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════ 読 ══════════ -->
+  <section class="scene" id="read">
+    <div class="read-head">
+      <p class="sign rev" style="justify-content:center">Ⅲ ― 読</p>
+      <h2 class="kin">手という、器</h2>
+    </div>
+
+    <article class="work rev">
+      <p class="work-no">WORK 01</p>
+      <h3>宇宙ハンド</h3>
+      <p class="work-en">COSMIC HAND ― 3DCG / 映像</p>
+      <p>暗闇のなかで、手がひとつの球体へ手をのばす。爪にのせた色は、身体のいちばん外側にありながら、内側の気配を映す膜になる。触れる／触れないの、ほんのわずかな距離に、共感のはじまりを置いた。</p>
+      <figure style="background-image:url('{{IMG:reference-space-hand}}')"></figure>
+    </article>
+
+    <article class="work rev">
+      <p class="work-no">WORK 02</p>
+      <h3>思唯手</h3>
+      <p class="work-en">THINKING HAND ― エッチング風レンダリング</p>
+      <p>量感をもった手が、線の集積へと還っていく。塗りを剥がし、輪郭と陰影だけを残すことで、身体が「かたち」ではなく「痕跡」として立ちあがる。物質としての手と、記号としての手のあいだを行き来する。</p>
+      <figure style="background-image:url('{{IMG:reference-thinking-hand}}'); filter:brightness(.96) grayscale(.15)"></figure>
+    </article>
+
+    <article class="work rev">
+      <p class="work-no">WORK 03</p>
+      <h3>試着の間</h3>
+      <p class="work-en">A ROOM TO TRY ON ― インタラクティブ</p>
+      <p>ネイルチップを「装着する」のではなく「試着する」場所。爪という小さな面に、光・粒子・半透明の層を重ね、身につける前の迷いや期待ごと作品にする。手ざわりを想起させる、静かな没入の部屋。</p>
+      <figure style="background-image:url('{{IMG:hand-orb-01}}')"></figure>
+    </article>
+
+    <div class="note rev">
+      <h3>RESEARCH NOTE ― 研究の文脈</h3>
+      <p>修士制作「デジタルと物質性の融合：ネイルアートにみる〈共感の場〉の探求」より。</p>
+      <p>ネイルは、身体の最外層に置かれた極小の絵画であり、同時に他者へ差し出される〈接触の面〉でもある。物質としての手ざわりと、デジタルな発光・反復・半透明を重ねることで、見る人と作品のあいだに生まれる共感の場を、手を軸に検証している。</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 残 ══════════ -->
+  <section class="scene" id="trace">
+    <p class="sign rev" style="justify-content:center">Ⅳ ― 残</p>
+    <div class="grid rev d1">
+      <figure class="cell" style="background-image:url('{{IMG:hand-orb-01}}')"><figcaption>宇宙ハンド / 球</figcaption></figure>
+      <figure class="cell" style="background-image:url('{{IMG:reference-space-hand}}')"><figcaption>宇宙ハンド / 手</figcaption></figure>
+      <figure class="cell" style="background-image:url('{{IMG:reference-thinking-hand}}')"><figcaption>思唯手</figcaption></figure>
+      <figure class="cell" style="background-image:url('{{IMG:reference-nail-orb}}')"><figcaption>試着の間 / 発光</figcaption></figure>
+      <figure class="cell" style="background:radial-gradient(closest-side,rgba(224,168,190,.4),transparent 70%) 34% 40%/56% 56% no-repeat,radial-gradient(closest-side,rgba(169,198,230,.36),transparent 70%) 66% 62%/48% 48% no-repeat,#0c0c12"><figcaption>痕跡 / afterimage</figcaption></figure>
+      <figure class="cell" style="background:radial-gradient(circle at 50% 42%,rgba(191,163,106,.34),#0c0c12 68%)"><figcaption>曼荼羅 / 反復</figcaption></figure>
+    </div>
+    <p class="colophon rev d2">
+      試着の間 ― 触れる作品空間<br>
+      今福 恵美子 / EMIKO IMAFUKU<br>
+      京都芸術大学大学院 グラフィックアート専攻
+    </p>
+  </section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const IS_PHONE = matchMedia('(max-width: 820px)').matches || ('ontouchstart' in window);
+
+/* ═══════════════════════════════════════════════════
+   1. 作品空間本体 ― WebGL フラグメントシェーダー
+      画像を「膜」として扱い、触れた点から波が走る
+   ═══════════════════════════════════════════════════ */
+
+const VERT = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main(){ vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.0,1.0); }
+`;
+
+const FRAG = `
+precision highp float;
+varying vec2 vUv;
+
+uniform sampler2D uT0, uT1, uT2;
+uniform vec3  uAsp;      /* 各画像の縦横比 */
+uniform vec2  uRes;
+uniform float uTime;
+uniform float uProg;     /* 0..2  作品の変質 */
+uniform float uDots;     /* 0..1  粒子への分解 */
+uniform float uReveal;   /* 0..1  入場 */
+uniform float uDim;      /* 0..1  読む場面での後退 */
+uniform vec2  uPtr;      /* 視差 */
+uniform float uGrain;
+uniform float uZoom;     /* 縦長画面ほど作品を大きく見せる */
+uniform vec4  uRip[6];   /* xy=位置 z=開始時刻 w=有効 */
+
+#define PI 3.141592653589793
+#define RIPLIFE 2.4
+
+float hash21(vec2 p){
+  p = fract(p*vec2(123.34,456.21));
+  p += dot(p,p+45.32);
+  return fract(p.x*p.y);
+}
+
+/* 画面に収めつつ拡大する。縁は溶かすので「箱」に見えない */
+vec2 fitUV(vec2 uv, float imgAsp){
+  float scr = uRes.x/uRes.y;
+  vec2 s = (scr > imgAsp) ? vec2(scr/imgAsp,1.0) : vec2(1.0,imgAsp/scr);
+  return (uv-0.5)*(s/uZoom) + 0.5;
+}
+/* 端を羽根のようにぼかして、作品を暗闇に溶け込ませる */
+float inBox(vec2 p){
+  vec2 e = smoothstep(0.0,0.16,p) * smoothstep(1.0,0.84,p);
+  return e.x*e.y;
+}
+
+/* 3枚の作品を連続的に混ぜる */
+vec3 artwork(vec2 uv){
+  vec2 p0 = fitUV(uv,uAsp.x);
+  vec2 p1 = fitUV(uv,uAsp.y);
+  vec2 p2 = fitUV(uv,uAsp.z);
+  vec3 a = texture2D(uT0,p0).rgb * inBox(p0);
+  vec3 b = texture2D(uT1,p1).rgb * inBox(p1);
+  /* 思唯手は明るい紙の上の線画。反転して「闇に光る線」にする */
+  vec3 c = (1.0 - texture2D(uT2,p2).rgb) * inBox(p2);
+  float m1 = clamp(uProg,0.0,1.0);
+  float m2 = clamp(uProg-1.0,0.0,1.0);
+  return mix(mix(a,b,m1), c, m2);
+}
+
+/* 背景に漂う色の気配 */
+vec3 aura(vec2 uv){
+  float t = uTime*0.055;
+  vec3 s = vec3(0.0);
+  s += vec3(0.62,0.40,0.51) * exp(-7.0*length(uv-vec2(0.24+0.11*sin(t),      0.74+0.07*cos(t*1.3))));
+  s += vec3(0.42,0.37,0.68) * exp(-6.0*length(uv-vec2(0.79+0.09*cos(t*0.9),  0.33+0.10*sin(t*1.1))));
+  s += vec3(0.31,0.45,0.64) * exp(-8.0*length(uv-vec2(0.50+0.14*sin(t*0.7),  0.13+0.06*cos(t))));
+  return s*0.30;
+}
+
+/* 空間を漂う微粒子 */
+float motes(vec2 uv){
+  vec2 asp = vec2(uRes.x/uRes.y,1.0);
+  vec2 g = uv*asp*7.0;
+  vec2 id = floor(g);
+  vec2 f  = fract(g)-0.5;
+  float h = hash21(id);
+  float on = step(0.63,h);
+  float sp = 0.3+h*0.5;
+  vec2 c = vec2(hash21(id+1.37)-0.5, fract(hash21(id+7.71)-uTime*0.013*sp)-0.5);
+  float d = length(f-c*0.82);
+  float tw = 0.45+0.55*sin(uTime*1.3+h*30.0);
+  return smoothstep(0.05,0.0,d)*tw*on;
+}
+
+void main(){
+  vec2 uv = vUv;
+  vec2 asp = vec2(uRes.x/uRes.y,1.0);
+
+  /* ── 触れた点から走る波（膜のふるえ） ── */
+  vec2  disp = vec2(0.0);
+  float glow = 0.0;
+  for(int i=0;i<6;i++){
+    vec4 r = uRip[i];
+    float age = uTime - r.z;
+    if(r.w < 0.5 || age < 0.0 || age > RIPLIFE) continue;
+    vec2  d    = (uv - r.xy)*asp;
+    float dist = length(d);
+    float life = 1.0 - age/RIPLIFE; life *= life;
+    float wave = sin(-PI*13.0*(dist - age*0.26));
+    float band = smoothstep(0.46,0.0,dist)*smoothstep(0.0,0.05,dist);
+    disp += normalize(d+1e-5) * wave * band * life * 0.021;
+    glow += band*life*abs(wave)*0.42;
+  }
+
+  /* 呼吸と、指の位置による視差 */
+  uv = (uv-0.5)*(1.0-0.016*sin(uTime*0.22)) + 0.5;
+  uv += (uPtr-0.5)*0.014;
+  uv += disp;
+
+  /* ── 表面が粒子へ分解していく ── */
+  float cells = 118.0;
+  vec2  g   = uv*asp*cells;
+  vec2  id  = floor(g);
+  vec2  fr  = fract(g)-0.5;
+  vec2  cUV = (id+0.5)/(asp*cells);
+  float hj  = hash21(id);
+  fr -= vec2(sin(uTime*0.6+hj*6.28), cos(uTime*0.5+hj*6.28))*0.14*uDots;
+
+  vec3 col = artwork(mix(uv, cUV, uDots));
+
+  float lum  = dot(col, vec3(0.299,0.587,0.114));
+  float rad  = sqrt(lum)*0.66*(0.80+0.40*hj);   /* 粒の大きさを不揃いにして有機的に */
+  float mask = smoothstep(rad, rad-0.2, length(fr));
+  col *= mix(1.0, mask*1.4, uDots);
+
+  /* 触れた波紋が光をにじませる */
+  col += glow * vec3(0.52,0.70,1.0);
+
+  /* 読む場面では作品が静かに後退し、色の気配だけが残る */
+  col *= (1.0 - uDim*0.86);
+  col += aura(vUv) * (0.75+0.35*uDim);
+  col += motes(vUv) * vec3(0.80,0.86,1.0) * 0.42 * (1.0-uDim*0.5);
+
+  /* 粒状感（物質性） */
+  col += (hash21(vUv*uRes + fract(uTime)*137.0)-0.5)*uGrain;
+
+  /* 周辺減光 */
+  col *= 1.0 - 0.5*pow(length((vUv-0.5)*vec2(1.0,1.12))*1.45, 2.0);
+
+  col *= uReveal;
+  gl_FragColor = vec4(max(col,0.0), 1.0);
+}
+`;
+
+const IMAGES = {
+  t0: '{{IMG:hand-orb-01}}',
+  t1: '{{IMG:reference-space-hand}}',
+  t2: '{{IMG:reference-thinking-hand}}'
+};
+
+const glCanvas = document.getElementById('gl');
+let GL = null;
+
+function initGL(){
+  const gl = glCanvas.getContext('webgl',{alpha:false,antialias:false,depth:false,
+                                          stencil:false,powerPreference:'high-performance'})
+          || glCanvas.getContext('experimental-webgl');
+  if(!gl) return null;
+
+  function sh(type,src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s,src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){
+      console.warn('shader:', gl.getShaderInfoLog(s)); return null;
+    }
+    return s;
+  }
+  const vs = sh(gl.VERTEX_SHADER,VERT), fs = sh(gl.FRAGMENT_SHADER,FRAG);
+  if(!vs||!fs) return null;
+  const prog = gl.createProgram();
+  gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){
+    console.warn('link:', gl.getProgramInfoLog(prog)); return null;
+  }
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 3,-1, -1,3]),gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog,'aPos');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+  const U = {};
+  ['uT0','uT1','uT2','uAsp','uRes','uTime','uProg','uDots','uReveal','uDim','uPtr','uGrain','uZoom']
+    .forEach(n=> U[n]=gl.getUniformLocation(prog,n));
+  U.uRip = gl.getUniformLocation(prog,'uRip[0]');
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+  return {gl,prog,U};
+}
+
+function makeTexture(gl,img){
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);
+  return t;
+}
+
+function loadImg(src){
+  return new Promise((res,rej)=>{
+    const i = new Image();
+    i.onload = ()=>res(i);
+    i.onerror = rej;
+    i.src = src;
+  });
+}
+
+/* ── 状態 ── */
+const state = {
+  prog:0, dots:0, dim:0, reveal:0, ptr:[0.5,0.5], ptrT:[0.5,0.5],
+  ripples: new Float32Array(24), slot:0, t0: performance.now()
+};
+
+function addRipple(nx,ny){
+  const i = state.slot % 6;
+  const t = (performance.now()-state.t0)/1000;
+  state.ripples[i*4+0]=nx;
+  state.ripples[i*4+1]=ny;
+  state.ripples[i*4+2]=t;
+  state.ripples[i*4+3]=1;
+  state.slot++;
+}
+
+async function startGL(){
+  const ctx = initGL();
+  if(!ctx){ document.body.classList.add('no-gl'); return false; }
+  const {gl,U} = ctx;
+
+  let imgs;
+  try{
+    imgs = await Promise.all([loadImg(IMAGES.t0),loadImg(IMAGES.t1),loadImg(IMAGES.t2)]);
+  }catch(e){ document.body.classList.add('no-gl'); return false; }
+
+  try{
+    const tex = imgs.map(im=>makeTexture(gl,im));
+    tex.forEach((t,i)=>{ gl.activeTexture(gl.TEXTURE0+i); gl.bindTexture(gl.TEXTURE_2D,t); });
+    gl.uniform1i(U.uT0,0); gl.uniform1i(U.uT1,1); gl.uniform1i(U.uT2,2);
+    gl.uniform3f(U.uAsp, imgs[0].width/imgs[0].height,
+                         imgs[1].width/imgs[1].height,
+                         imgs[2].width/imgs[2].height);
+  }catch(e){
+    /* file:// でのテクスチャ制限など */
+    console.warn('texture:',e); document.body.classList.add('no-gl'); return false;
+  }
+
+  const DPR_CAP = IS_PHONE ? 1.3 : 1.75;
+  function resize(){
+    const d = Math.min(devicePixelRatio||1, DPR_CAP);
+    const w = Math.round(innerWidth*d), h = Math.round(innerHeight*d);
+    if(glCanvas.width!==w || glCanvas.height!==h){
+      glCanvas.width=w; glCanvas.height=h;
+      glCanvas.style.width=innerWidth+'px'; glCanvas.style.height=innerHeight+'px';
+      gl.viewport(0,0,w,h);
+      gl.uniform2f(U.uRes,w,h);
+      /* 縦長の画面ほど作品を大きく引き寄せる（スマホで小さく見えないように） */
+      const scr = w/h;
+      gl.uniform1f(U.uZoom, scr<1 ? 1.0+(1.0-scr)*1.55 : 1.06);
+    }
+  }
+  addEventListener('resize',resize,{passive:true});
+  addEventListener('orientationchange',()=>setTimeout(resize,220),{passive:true});
+  resize();
+
+  gl.uniform1f(U.uGrain, IS_PHONE ? 0.055 : 0.045);
+
+  let running = true;
+  document.addEventListener('visibilitychange',()=>{
+    running = !document.hidden;
+    if(running) requestAnimationFrame(frame);
+  });
+
+  function frame(){
+    if(!running) return;
+    const t = (performance.now()-state.t0)/1000;
+    /* 指の位置はゆっくり追従させる（触覚的な遅れ） */
+    state.ptr[0] += (state.ptrT[0]-state.ptr[0])*0.045;
+    state.ptr[1] += (state.ptrT[1]-state.ptr[1])*0.045;
+
+    gl.uniform1f(U.uTime,t);
+    gl.uniform1f(U.uProg,state.prog);
+    gl.uniform1f(U.uDots,state.dots);
+    gl.uniform1f(U.uDim,state.dim);
+    gl.uniform1f(U.uReveal,state.reveal);
+    gl.uniform2f(U.uPtr,state.ptr[0],state.ptr[1]);
+    gl.uniform4fv(U.uRip,state.ripples);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════
+   2. 触れて飛ぶ粒子（普段は空・触れた時だけ動く）
+   ═══════════════════════════════════════════════════ */
+(function(){
+  const cv = document.getElementById('motes');
+  const ctx = cv.getContext('2d');
+  let W,H,D,ps=[],raf=null;
+  const TINT = ['239,236,231','169,198,230','224,168,190','191,163,106'];
+
+  function size(){
+    D = Math.min(devicePixelRatio||1, 2);
+    W = cv.width = innerWidth*D; H = cv.height = innerHeight*D;
+    cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+  }
+  addEventListener('resize',size,{passive:true}); size();
+
+  window.__burst = function(x,y,n){
+    for(let i=0;i<n;i++){
+      const a=Math.random()*6.283, s=(Math.random()*1.9+0.25)*D;
+      ps.push({x:x*D,y:y*D,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.5*D,
+               r:(Math.random()*1.9+0.5)*D,l:1,
+               d:Math.random()*0.011+0.006,
+               c:TINT[Math.random()<0.55?0:1+(Math.random()*3|0)]});
+    }
+    if(ps.length>420) ps.splice(0,ps.length-420);
+    if(!raf) raf=requestAnimationFrame(tick);
+  };
+
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(let i=ps.length-1;i>=0;i--){
+      const p=ps[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.013*D; p.vx*=0.986; p.vy*=0.986; p.l-=p.d;
+      if(p.l<=0){ ps.splice(i,1); continue; }
+      ctx.beginPath();
+      ctx.fillStyle='rgba('+p.c+','+(p.l*0.75)+')';
+      ctx.arc(p.x,p.y,p.r*p.l,0,6.283); ctx.fill();
+    }
+    ctx.globalCompositeOperation='source-over';
+    raf = ps.length ? requestAnimationFrame(tick) : null;
+  }
+})();
+
+/* ═══════════════════════════════════════════════════
+   3. 触れる ― 画面のどこでも反応する
+   ═══════════════════════════════════════════════════ */
+(function(){
+  let last = 0;
+  function touch(cx,cy,strong){
+    const nx = cx/innerWidth, ny = 1-cy/innerHeight;
+    addRipple(nx,ny);
+    if(window.__burst) window.__burst(cx,cy,strong?18:9);
+    document.body.classList.add('touched');
+  }
+  addEventListener('pointerdown',e=>{ touch(e.clientX,e.clientY,true); },{passive:true});
+  addEventListener('pointermove',e=>{
+    state.ptrT[0]=e.clientX/innerWidth;
+    state.ptrT[1]=1-e.clientY/innerHeight;
+    if(e.buttons||e.pressure>0){
+      const n=performance.now();
+      if(n-last>110){ last=n; touch(e.clientX,e.clientY,false); }
+    }
+  },{passive:true});
+  /* 端末を傾けても層が動く */
+  addEventListener('deviceorientation',e=>{
+    if(e.gamma==null) return;
+    state.ptrT[0]=0.5+Math.max(-1,Math.min(1,e.gamma/32))*0.5;
+    state.ptrT[1]=0.5+Math.max(-1,Math.min(1,(e.beta-45)/44))*0.5;
+  },{passive:true});
+})();
+
+/* ═══════════════════════════════════════════════════
+   4. スクロール ― 場面の進行が作品を変質させる
+   ═══════════════════════════════════════════════════ */
+(function(){
+  const shift = document.getElementById('shift');
+  const read  = document.getElementById('read');
+  let target = {prog:0,dots:0,dim:0};
+
+  function measure(){
+    const vh = innerHeight;
+    /* 変の場面での進行度 0..1 */
+    const r = shift.getBoundingClientRect();
+    const span = r.height - vh;
+    let p = span>0 ? (-r.top)/span : 0;
+    p = Math.max(0,Math.min(1,p));
+    target.prog = p*2;                       /* 3枚を連続で渡り歩く */
+    /* 渡りの最中だけ粒子に分解する（0.5 と 1.5 で最大） */
+    const q = p*2;
+    const d1 = 1-Math.min(1,Math.abs(q-0.5)/0.5);
+    const d2 = 1-Math.min(1,Math.abs(q-1.5)/0.5);
+    target.dots = Math.max(d1,d2)*0.92;
+
+    /* 読む／残る場面では作品を後退させる */
+    const rr = read.getBoundingClientRect();
+    target.dim = Math.max(0, Math.min(1, (vh*0.82 - rr.top)/(vh*0.5) ));
+  }
+
+  function loop(){
+    measure();
+    state.prog   += (target.prog-state.prog)*0.09;
+    state.dots   += (target.dots-state.dots)*0.09;
+    state.dim    += (target.dim -state.dim )*0.09;
+    requestAnimationFrame(loop);
+  }
+  addEventListener('scroll',measure,{passive:true});
+  addEventListener('resize',measure,{passive:true});
+  requestAnimationFrame(loop);
+})();
+
+/* ═══════════════════════════════════════════════════
+   5. 文字 ― 一字ずつ立ちあがる
+   ═══════════════════════════════════════════════════ */
+(function(){
+  document.querySelectorAll('.kin').forEach(el=>{
+    const txt = el.textContent;
+    el.textContent = '';
+    [...txt].forEach((ch,i)=>{
+      const s = document.createElement('span');
+      s.className='ch';
+      s.textContent = ch;
+      s.style.transitionDelay = (i*0.05)+'s';
+      el.appendChild(s);
+    });
+  });
+
+  const io = new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+  },{threshold:.25});
+  document.querySelectorAll('.kin,.rev').forEach(el=>io.observe(el));
+})();
+
+/* ═══════════════════════════════════════════════════
+   6. 入場とメニュー
+   ═══════════════════════════════════════════════════ */
+(function(){
+  const gate = document.getElementById('gate');
+  const burger = document.getElementById('burger');
+  const nav = document.getElementById('nav');
+
+  burger.addEventListener('click',()=>{
+    burger.classList.toggle('on'); nav.classList.toggle('on');
+  });
+  nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
+    burger.classList.remove('on'); nav.classList.remove('on');
+  }));
+
+  function open(){
+    gate.classList.add('off');
+    burger.classList.add('show');
+    /* 作品世界が静かに立ちあがる */
+    const t0 = performance.now();
+    (function fade(){
+      const k = Math.min(1,(performance.now()-t0)/2600);
+      state.reveal = k<1 ? k*k*(3-2*k) : 1;
+      if(k<1) requestAnimationFrame(fade);
+    })();
+    document.querySelectorAll('#prologue .kin,#prologue .rev').forEach(e=>e.classList.add('in'));
+  }
+
+  startGL().then(ok=>{
+    if(!ok) state.reveal = 1;
+    setTimeout(open, ok ? 700 : 300);
+  });
+  /* 保険：何かに失敗しても必ず開く */
+  setTimeout(()=>{ if(!gate.classList.contains('off')){ state.reveal=1; open(); } }, 5000);
+})();
+
+})();
+</script>
+</body>
+</html>
