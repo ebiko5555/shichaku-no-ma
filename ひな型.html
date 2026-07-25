@@ -207,43 +207,64 @@ body.touched .whisper{opacity:1; transform:none}
   letter-spacing:.02em;               /* 1行が半端に折り返さないよう詰める */
   color:var(--ink-dim); line-height:2.2;
 }
-/* 入口 ― 光の環をくぐる */
+/* 入口 ― 4つの光の環。それぞれ別のアトリエへ */
+.doors{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:clamp(1rem,4vw,2rem);
+  width:100%; max-width:440px;
+  margin-top:clamp(2.4rem,7vh,3.6rem);
+}
+@media (min-width:760px){
+  .doors{grid-template-columns:repeat(4,1fr); max-width:820px}
+}
 .door{
-  display:grid; place-items:center;
-  width:min(64vw,220px); aspect-ratio:1/1;
-  margin-top:clamp(2.6rem,8vh,4rem);
-  text-decoration:none; position:relative;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  aspect-ratio:1/1; position:relative;
+  text-decoration:none; gap:.5rem;
   transition:transform .8s var(--ease);
 }
 .door-ring{
   position:absolute; inset:0; border-radius:50%;
-  border:1px solid rgba(239,236,231,.26);
+  border:1px solid rgba(239,236,231,.22);
   background:radial-gradient(circle at 50% 45%,
-    rgba(169,198,230,.16), rgba(224,168,190,.07) 46%, transparent 70%);
+    rgba(169,198,230,.15), rgba(224,168,190,.06) 46%, transparent 70%);
   transition:border-color .8s var(--ease), transform .8s var(--ease);
 }
-.door-ring::before,.door-ring::after{
+.door-ring::after{
   content:''; position:absolute; inset:-1px; border-radius:50%;
-  border:1px solid rgba(169,198,230,.34);
-  animation:doorEmit 4.2s var(--ease) infinite;
+  border:1px solid rgba(169,198,230,.3);
+  animation:doorEmit 5s var(--ease) infinite;
 }
-.door-ring::after{animation-delay:2.1s}
+/* 環が順番に呼吸する */
+.door:nth-child(2) .door-ring::after{animation-delay:1.25s}
+.door:nth-child(3) .door-ring::after{animation-delay:2.5s}
+.door:nth-child(4) .door-ring::after{animation-delay:3.75s}
 @keyframes doorEmit{
   0%{transform:scale(.86); opacity:0}
-  30%{opacity:.75}
-  100%{transform:scale(1.42); opacity:0}
+  30%{opacity:.6}
+  100%{transform:scale(1.34); opacity:0}
 }
-.door-label{
+.door-name{
   position:relative; z-index:1;
-  font-size:clamp(.95rem,4.2vw,1.1rem);
-  letter-spacing:.24em; text-indent:.24em;
+  font-size:clamp(1.5rem,7vw,2rem);
+  letter-spacing:.12em; line-height:1.2;
   color:var(--ink);
-  text-shadow:0 0 24px rgba(0,0,0,.7);
+  text-shadow:0 0 26px rgba(0,0,0,.8);
 }
-.door:active{transform:scale(.97)}
+.door-desc{
+  position:relative; z-index:1;
+  font-family:var(--sans);
+  font-size:clamp(.5rem,2.3vw,.58rem);
+  letter-spacing:.14em; line-height:1.7;
+  color:var(--ink-faint); text-align:center;
+  max-width:82%;
+  text-shadow:0 0 14px rgba(0,0,0,.9);
+}
+.door:active{transform:scale(.96)}
 .door:hover .door-ring,.door:active .door-ring{
-  border-color:rgba(239,236,231,.6); transform:scale(1.04);
+  border-color:rgba(239,236,231,.55); transform:scale(1.05);
 }
+.door:hover .door-desc,.door:active .door-desc{color:var(--ink-dim)}
 .fitting-note{
   margin-top:clamp(2rem,6vh,3rem);
   font-family:var(--sans); font-size:.6rem;
@@ -465,10 +486,28 @@ body.touched .whisper{opacity:1; transform:none}
     <p class="sign rev" style="justify-content:center">{{T:場面の名前・試}}</p>
     <h2 class="fitting-title kin">{{T:試着の間の見出し}}</h2>
     <p class="fitting-lead rev d1">{{T:試着の間の説明}}</p>
-    <a class="door rev d2" href="{{T:試着アプリのURL}}" target="_blank" rel="noopener">
-      <span class="door-ring"></span>
-      <span class="door-label">{{T:試着ボタンの言葉}}</span>
-    </a>
+    <div class="doors rev d2">
+      <a class="door" href="{{T:試着1のURL}}" target="_blank" rel="noopener">
+        <span class="door-ring"></span>
+        <span class="door-name">{{T:試着1の名前}}</span>
+        <span class="door-desc">{{T:試着1の説明}}</span>
+      </a>
+      <a class="door" href="{{T:試着2のURL}}" target="_blank" rel="noopener">
+        <span class="door-ring"></span>
+        <span class="door-name">{{T:試着2の名前}}</span>
+        <span class="door-desc">{{T:試着2の説明}}</span>
+      </a>
+      <a class="door" href="{{T:試着3のURL}}" target="_blank" rel="noopener">
+        <span class="door-ring"></span>
+        <span class="door-name">{{T:試着3の名前}}</span>
+        <span class="door-desc">{{T:試着3の説明}}</span>
+      </a>
+      <a class="door" href="{{T:試着4のURL}}" target="_blank" rel="noopener">
+        <span class="door-ring"></span>
+        <span class="door-name">{{T:試着4の名前}}</span>
+        <span class="door-desc">{{T:試着4の説明}}</span>
+      </a>
+    </div>
     <p class="fitting-note rev d3">{{T:試着の間の注記}}</p>
   </section>
 
