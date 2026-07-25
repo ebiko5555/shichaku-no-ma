@@ -193,7 +193,7 @@ body.touched .whisper{opacity:1; transform:none}
 /* ═══════════════ 試 ― 実際に試着する場所 ═══════════════ */
 #fitting{
   gap:0;
-  background:linear-gradient(180deg,transparent,rgba(6,6,10,.72) 18%,rgba(6,6,10,.72) 82%,transparent);
+  background:linear-gradient(180deg,transparent,rgba(6,6,10,.84) 16%,rgba(6,6,10,.84) 84%,transparent);
 }
 .fitting-title{
   font-size:clamp(2rem,11vw,3.4rem);
@@ -202,8 +202,9 @@ body.touched .whisper{opacity:1; transform:none}
   text-shadow:0 0 50px rgba(169,198,230,.3);
 }
 .fitting-lead{
-  max-width:26rem; margin-top:1.9rem;
-  font-size:clamp(.88rem,3.9vw,1rem);
+  max-width:26rem; width:100%; margin-top:1.9rem;
+  font-size:clamp(.84rem,3.65vw,.98rem);
+  letter-spacing:.02em;               /* 1行が半端に折り返さないよう詰める */
   color:var(--ink-dim); line-height:2.2;
 }
 /* 入口 ― 光の環をくぐる */
@@ -664,7 +665,7 @@ void main(){
   col += glow * vec3(0.52,0.70,1.0);
 
   /* 読む場面では作品が静かに後退し、色の気配だけが残る */
-  col *= (1.0 - uDim*0.86);
+  col *= (1.0 - uDim*0.93);
   col += aura(vUv) * (0.75+0.35*uDim);
   col += motes(vUv) * vec3(0.80,0.86,1.0) * 0.42 * (1.0-uDim*0.5);
 
