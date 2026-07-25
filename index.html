@@ -191,7 +191,10 @@ body.touched .whisper{opacity:1; transform:none}
 }
 
 /* ═══════════════ 試 ― 実際に試着する場所 ═══════════════ */
-#fitting{gap:0}
+#fitting{
+  gap:0;
+  background:linear-gradient(180deg,transparent,rgba(6,6,10,.72) 18%,rgba(6,6,10,.72) 82%,transparent);
+}
 .fitting-title{
   font-size:clamp(2rem,11vw,3.4rem);
   font-weight:400; letter-spacing:.18em; line-height:1.4;
@@ -906,7 +909,8 @@ async function startGL(){
    ═══════════════════════════════════════════════════ */
 (function(){
   const shift = document.getElementById('shift');
-  const read  = document.getElementById('read');
+  /* 「試」以降は作品を後退させ、文字を読みやすくする */
+  const read  = document.getElementById('fitting') || document.getElementById('read');
   let target = {prog:0,dots:0,dim:0};
 
   function measure(){
