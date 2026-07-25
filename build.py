@@ -24,10 +24,37 @@ TEMPLATE = os.path.join(ROOT, 'ひな型.html')
 TEXTFILE = os.path.join(ROOT, '文章.txt')
 OUTPUT   = os.path.join(ROOT, 'index.html')
 
+# 作品ページ
+W_TEMPLATE = os.path.join(ROOT, '作品ページのひな型.html')
+W_LIST     = os.path.join(ROOT, '作品リスト.txt')
+W_OUTPUT   = os.path.join(ROOT, 'works.html')
+W_MEDIADIR = os.path.join(ASSETS, 'works')
+
+VIDEO_EXTS = ('.mp4', '.mov', '.webm', '.m4v')
+
 MAX_PX  = 1200   # 長辺の最大ピクセル（大きくすると綺麗／重い）
 QUALITY = 72     # JPEG品質 1-100
 
 EXTS = ('.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG', '.webp')
+
+
+def parse_blocks(path):
+    """[見出し] → 本文 を順番に並べたリストにする（同じ見出しが複数あってもよい）"""
+    head = re.compile(r'^[\[［]\s*(.+?)\s*[\]］]\s*$')
+    out, key, buf = [], None, []
+    for line in open(path, encoding='utf-8').read().splitlines():
+        m = head.match(line)
+        if m:
+            if key is not None:
+                out.append((key, '\n'.join(buf).strip('\n')))
+            key, buf = m.group(1), []
+        elif line.lstrip().startswith('#'):
+            continue
+        elif key is not None:
+            buf.append(line)
+    if key is not None:
+        out.append((key, '\n'.join(buf).strip('\n')))
+    return out
 
 
 def load_text():
@@ -103,6 +130,88 @@ def embed(name):
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+def build_works():
+    """作品リスト.txt + 作品ページのひな型.html → works.html"""
+    if not os.path.exists(W_TEMPLATE) or not os.path.exists(W_LIST):
+        print('  ※ 作品ページのひな型.html か 作品リスト.txt がないため、作品ページは作りません。')
+        return
+
+    blocks = parse_blocks(W_LIST)
+
+    # [作品] が出てくるまではページ全体の設定
+    page, works, cur = {}, [], None
+    for key, val in blocks:
+        if key == '作品':
+            cur = {'作品': val}
+            works.append(cur)
+        elif cur is None:
+            page[key] = val
+        else:
+            cur[key] = val
+
+    # 作品ひとつぶんのHTMLを組む
+    parts, warn = [], []
+    for i, w in enumerate(works, 1):
+        media = (w.get('素材') or '').strip()
+        if not media:
+            warn.append('%s（素材のファイル名が空）' % w.get('作品', '?'))
+            continue
+        path = os.path.join(W_MEDIADIR, media)
+        if not os.path.exists(path):
+            warn.append('%s（assets/works/%s が見つからない）' % (w.get('作品', '?'), media))
+            continue
+
+        src = 'assets/works/' + media
+        if media.lower().endswith(VIDEO_EXTS):
+            base = os.path.splitext(media)[0]
+            poster = base + '-poster.jpg'
+            pattr = ''
+            if os.path.exists(os.path.join(W_MEDIADIR, poster)):
+                pattr = ' poster="assets/works/%s"' % poster
+            inner = ('<video src="%s"%s muted loop playsinline preload="none" '
+                     'disablepictureinpicture></video>\n'
+                     '        <span class="tap"><span>PLAY</span></span>' % (src, pattr))
+        else:
+            inner = '<img src="%s" alt="%s" loading="lazy">' % (src, esc(w.get('作品', '')))
+
+        parts.append(
+            '  <section class="work">\n'
+            '    <div class="media rev">\n        %s\n    </div>\n'
+            '    <p class="no rev">WORK %02d</p>\n'
+            '    <h2 class="rev">%s</h2>\n'
+            '    <p class="en rev">%s</p>\n'
+            '    <p class="rev d1">%s</p>\n'
+            '  </section>'
+            % (inner, i,
+               esc(w.get('作品', '')),
+               esc(w.get('英語', '')),
+               esc(w.get('説明', '')).replace('\n', '<br>'))
+        )
+
+    html = open(W_TEMPLATE, encoding='utf-8').read()
+    lost = []
+
+    def put(m):
+        kind, key = m.group(1), m.group(2)
+        if key not in page:
+            lost.append(key)
+            return ''
+        body = esc(page[key])
+        return body.replace('\n', '<br>' if kind == 'T' else ' ')
+
+    html = re.sub(r'\{\{(TP?):([^}]+)\}\}', put, html)
+    html = html.replace('{{WORKS}}', '\n\n'.join(parts))
+
+    with open(W_OUTPUT, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+    print('  ○ 作品ページ works.html … 作品%d点' % len(parts))
+    for w in warn:
+        print('     × 飛ばした作品: ' + w)
+    for k in sorted(set(lost)):
+        print('     × 項目が見あたらない: ［%s］' % k)
+
+
 def main():
     if not os.path.exists(TEMPLATE):
         print('ひな型.html が見つかりません。')
@@ -135,6 +244,10 @@ def main():
 
     with open(OUTPUT, 'w', encoding='utf-8') as f:
         f.write(html)
+
+    # ── 3. 作品ページ ──
+    print('作品ページを組んでいます…')
+    build_works()
 
     size = os.path.getsize(OUTPUT) / 1024 / 1024
     print('')

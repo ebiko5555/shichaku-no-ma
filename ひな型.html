@@ -400,45 +400,45 @@ body.touched .whisper{opacity:1; transform:none}
   font-size:clamp(.84rem,3.65vw,.98rem);
   letter-spacing:.02em; color:var(--ink-dim); line-height:2.2;
 }
-/* 写真そのものが入口 */
-.realm-door{
-  display:block; position:relative; text-decoration:none;
-  width:100%; max-width:430px;
-  margin-top:clamp(2.4rem,7vh,3.6rem);
-  transition:transform .9s var(--ease);
-}
+/* 手で作ったコラージュ ― 実物なので暗く沈めず、そのままの明るさで出す */
 .realm-photo{
-  width:100%; aspect-ratio:4/5; border-radius:3px;
+  position:relative;
+  width:100%; max-width:400px; aspect-ratio:4/5.4;
+  margin-top:clamp(2.4rem,7vh,3.4rem);
   background-size:cover; background-position:center;
-  /* CGではなく実写なので、暗く沈めず、ほぼそのままの明るさで出す */
-  filter:saturate(1.02) brightness(.97);
-  -webkit-mask-image:radial-gradient(84% 78% at 50% 48%,#000 58%,transparent 96%);
-          mask-image:radial-gradient(84% 78% at 50% 48%,#000 58%,transparent 96%);
-  transition:filter .9s var(--ease);
+  filter:saturate(1.02) brightness(.98);
+  -webkit-mask-image:radial-gradient(86% 80% at 50% 48%,#000 60%,transparent 97%);
+          mask-image:radial-gradient(86% 80% at 50% 48%,#000 60%,transparent 97%);
 }
-.realm-door::after{           /* 実写のまわりにだけ、鈍い金の気配 */
-  content:''; position:absolute; inset:-6%; border-radius:50%;
-  background:radial-gradient(circle,rgba(191,163,106,.16),transparent 62%);
+.realm-photo::after{          /* まわりにだけ、鈍い金の気配 */
+  content:''; position:absolute; inset:-10%;
+  background:radial-gradient(circle,rgba(191,163,106,.14),transparent 62%);
   z-index:-1; pointer-events:none;
 }
-.realm-cap{
-  display:flex; flex-direction:column; align-items:center; gap:.55rem;
-  margin-top:1.5rem; text-align:center;
+
+/* ケアのページへ ― ボタンひとつだけ */
+.care-btn{
+  display:inline-flex; flex-direction:column; align-items:center; gap:.5rem;
+  margin-top:clamp(2.4rem,7vh,3.4rem);
+  padding:1.1rem 2.6rem;
+  text-decoration:none; border-radius:999px;
+  border:1px solid rgba(239,236,231,.26);
+  background:linear-gradient(rgba(191,163,106,.08),rgba(191,163,106,.02));
+  transition:border-color .7s var(--ease), background .7s var(--ease), transform .7s var(--ease);
 }
-.realm-cap b{
-  font-family:var(--serif); font-weight:400;
-  font-size:clamp(1.15rem,5vw,1.5rem); letter-spacing:.2em; text-indent:.2em;
-  color:var(--ink);
+.care-btn-name{
+  font-family:var(--serif); font-size:clamp(1.05rem,4.6vw,1.3rem);
+  letter-spacing:.24em; text-indent:.24em; color:var(--ink);
 }
-.realm-cap i{
-  font-style:normal; font-family:var(--sans);
-  font-size:.58rem; letter-spacing:.22em; text-indent:.22em;
-  color:var(--gold); line-height:2;
+.care-btn-en{
+  font-family:var(--sans); font-size:.55rem;
+  letter-spacing:.24em; text-indent:.24em; color:var(--gold); line-height:1.9;
 }
-.realm-door:active{transform:scale(.985)}
-.realm-door:hover .realm-photo,.realm-door:active .realm-photo{
-  filter:saturate(1.1) brightness(1.05);
+.care-btn:hover,.care-btn:active{
+  border-color:rgba(239,236,231,.58);
+  background:linear-gradient(rgba(191,163,106,.16),rgba(191,163,106,.05));
 }
+.care-btn:active{transform:scale(.98)}
 
 /* ═══ 最小メニュー ═══ */
 #burger{
@@ -528,7 +528,8 @@ body.touched .whisper{opacity:1; transform:none}
   <a href="#touch">触<small>TOUCH</small></a>
   <a href="#shift">変<small>TRANSFIGURE</small></a>
   <a href="#fitting">試<small>TRY ON</small></a>
-  <a href="#read">読<small>WORKS</small></a>
+  <a href="#read">読<small>CONCEPT</small></a>
+  <a href="./works.html">作<small>WORK</small></a>
   <a href="#trace">残<small>TRACE</small></a>
   <a href="#realm">還<small>REAL</small></a>
 </nav>
@@ -649,6 +650,12 @@ body.touched .whisper{opacity:1; transform:none}
       <p>{{T:研究ノートの文章1}}</p>
       <p>{{T:研究ノートの文章2}}</p>
     </div>
+
+    <!-- 作品ページへ（映像を並べた別ページ） -->
+    <a class="care-btn rev d1" style="align-self:center" href="./works.html">
+      <span class="care-btn-name">{{T:作品ページの名前}}</span>
+      <span class="care-btn-en">{{T:作品ページの説明}}</span>
+    </a>
   </section>
 
   <!-- ══════════ 残 ══════════ -->
@@ -670,13 +677,13 @@ body.touched .whisper{opacity:1; transform:none}
     <h2 class="realm-title kin">{{T:還るの見出し}}</h2>
     <p class="realm-lead rev d1">{{T:還るの説明}}</p>
 
+    <!-- 手で作ったコラージュ。押せるのは下のボタンだけ -->
+    <figure class="realm-photo rev d2" style="background-image:url('{{IMG:care-collage}}')"></figure>
+
     <!-- 戻り道を用意してあるので、同じ画面で往復させる -->
-    <a class="realm-door rev d2" href="{{T:ケアのページのURL}}">
-      <figure class="realm-photo" style="background-image:url('{{IMG:real-nails}}')"></figure>
-      <span class="realm-cap">
-        <b>{{T:ケアのページの名前}}</b>
-        <i>{{T:ケアのページの説明}}</i>
-      </span>
+    <a class="care-btn rev d3" href="{{T:ケアのページのURL}}">
+      <span class="care-btn-name">{{T:ケアのページの名前}}</span>
+      <span class="care-btn-en">{{T:ケアのページの説明}}</span>
     </a>
 
     <p class="fitting-note rev d3">{{T:還るの注記}}</p>
