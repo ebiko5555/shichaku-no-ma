@@ -64,7 +64,7 @@
 
 | 場面 | 行き先 |
 |---|---|
-| 試 | [艶](https://ebiko5555.github.io/tsuya-atelier/) / [磨](https://ebiko5555.github.io/migaki-atelier/) / [にじ](https://ebiko5555.github.io/niji-atelier/) / [AURA](https://ebiko5555.github.io/aura-atelier/) |
+| 試 | [艶](https://ebiko5555.github.io/tsuya-v2/) / [磨](https://ebiko5555.github.io/migaki-atelier/) / [にじ](https://ebiko5555.github.io/niji-atelier/) / [AURA](https://ebiko5555.github.io/aura-atelier/) |
 | 還 | [ととのえる ― 爪と手のケア](https://ebiko5555.github.io/nail-care-showcase/) |
 
 「ととのえる」側にも**試着の間へ戻る道**を付けたので、行き止まりになりません。
